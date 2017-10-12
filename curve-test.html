@@ -1,0 +1,265 @@
+<!doctype html>
+<html>
+  <head>
+    <style>
+      html, body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        -webkit-user-select:none;
+        -moz-user-select:none;
+        -ms-user-select:none;
+        user-select:none;
+      }
+      html{
+        font-size: 20px; /*10px*/
+      }
+      h1 {
+        font-size: 2rem;
+      }
+      body {
+        height: 100%;
+        overflow-x: hidden;
+      }
+      .container {
+        height: 100%;
+      }
+      .parent {
+         height: 800px; 
+         width: 2000px;
+         overflow: auto; 
+      }
+      .parent div {
+        width: 50px;
+        height: 500px;
+      }
+      .d1 {
+        background: #f40;
+      }
+      .d2 {
+        background: #f60;
+      }
+      .d3 {
+        background: #f80;
+      }
+      .canvas-box {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+      .btn-group {
+        position: fixed;
+        right: 50px;
+        bottom: 20px;
+        height: 40px;
+      }
+      .btn-box {
+        background: rgba(51, 198, 198, 0.59);
+        width: 150px;
+        height: 40px;
+        float: left;
+        margin: 0 20px;
+      }
+      .btn-box:before {
+        content: '';
+        display: table;
+      }
+      .btn {
+        width: 20px;
+        height: 20px;
+        line-height: 20px;
+        text-align: center;
+        margin: 10px 5px;
+        color: #228567;
+        background: rgba(65, 255, 192, 0.86);
+        cursor: pointer;
+        float: left;
+      }
+      .num, .name {
+        width: 30px;
+        height: 30px;
+        padding: 5px;
+        line-height: 30px;
+        text-align: center;
+        float: left;
+      }
+      .num {
+        width: 50px;
+        font-size: 16px;
+      }
+      .name {
+        width: 30px;
+        padding: 5px 0;
+        color: #425E4D;
+      }
+      .rate {
+        width: 100px;
+      }
+      .rate .name {
+        width: 50px;
+      }
+      .rate .num {
+        width: 40px;
+        height: 40px;
+        box-sizing: border-box;
+        background: rgba(165, 248, 219, 0.86);
+        border: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="btn-group">
+      <div class="btn-box rate" data-id="rate">
+        <div class="name">rate: </div>
+        <input class="num" id="rate" value="1"/>
+      </div>
+      <div class="btn-box" data-id="len">
+        <div class="name">len: </div>
+        <div class="btn" data-type="del">-</div>
+        <div class="num" id="len">50</div>
+        <div class="btn" data-type="add">+</div>
+      </div>
+      <div class="btn-box" data-id="w">
+        <div class="name">w: </div>
+        <div class="btn" data-type="del">-</div>
+        <div class="num" id="w">50</div>
+        <div class="btn" data-type="add">+</div>
+      </div>
+      <div class="btn-box" data-id="f">
+        <div class="name">f: </div>
+        <div class="btn" data-type="del">-</div>
+        <div class="num" id="f">50</div>
+        <div class="btn" data-type="add">+</div>
+      </div>
+      <div class="btn-box" data-id="b">
+        <div class="name">b: </div>
+        <div class="btn" data-type="del">-</div>
+        <div class="num" id="b">50</div>
+        <div class="btn" data-type="add">+</div>
+      </div>
+      <div class="btn-box" data-id="A">
+        <div class="name">A: </div>
+        <div class="btn" data-type="del">-</div>
+        <div class="num" id="A">50</div>
+        <div class="btn" data-type="add">+</div>
+      </div>
+    </div>
+    <div class="canvas-box" id="box">
+      <canvas id="canvas"></canvas>
+    </div>
+    <!-- <div class="container">
+      <div class="parent">
+          <h1>title title</h1>
+        <div class="d1">1</div>
+        <div class="d2">2</div>
+        <div class="d3">3</div>
+      </div>
+    </div> -->
+
+    <script type="text/javascript">  
+      // 获取 html 元素  
+      // var html = document.documentElement;  
+      
+      // // 封装一个函数  
+      // function fontS(){  
+      //   // 获取 html 的宽  
+      //   var hW = html.offsetWidth;  
+      //   // 计算字体大小，这里是 html 宽的五十分之一  
+      //   var hS = hW / 50;  
+      //   // 给刚开始时的 html 设置字体大小     
+      //   html.style.fontSize = hS + "px";  
+      // }  
+      // // 当窗口大小改变时执行函数   
+      // fontS();
+      // window.onresize = function(){
+      //   // console.log('resize')
+      //   // fontS();
+      // }  
+      function drawCurve(ctx, width, height) {
+        ctx.clearRect(0, 0, width, height);
+        // 设置背景
+        ctx.fillStyle = '#f3f3f3';
+        ctx.fillRect(0, 0, width, height);
+        // drawBezier(ctx, width, height);
+        var len = 100;
+        var w = 4 / 3;
+        var f = 50;
+        var b = height / 2;
+        var A = 100;
+        var control = {len, w, f, b, A}
+        initBtnGroup(control);
+        drawSin(ctx, width, height, control);
+        controlSin(ctx, width, height, control);
+      }
+      function controlSin(ctx, width, height, control) {
+        document.addEventListener('click', function (e) {
+          // console.log(e.target.className);
+          e.stopPropagation();
+          let target = e.target;
+          if(target.className === 'btn') {
+            let parent = target.parentNode;
+            let btn = target.getAttribute('data-type');
+            let type = parent.getAttribute('data-id');
+            let el = document.getElementById(type);
+            let rate = document.getElementById('rate').value;
+            let val = (Number(el.innerText) + (btn === 'add' ? 1 : -1) * rate).toFixed(2);
+            el.innerText = val;
+            control[type] = Number(val);
+            drawSin(ctx, width, height, control);
+          }
+        });
+      }
+      function initBtnGroup (control) {
+        const {len, w, f, b, A} = control;
+        document.getElementById('len').innerText = Number(len).toFixed(2);
+        document.getElementById('w').innerText = Number(w).toFixed(2);
+        document.getElementById('f').innerText = Number(f).toFixed(2);
+        document.getElementById('b').innerText = Number(b).toFixed(2);
+        document.getElementById('A').innerText = Number(A).toFixed(2);
+      }
+      function drawBezier(ctx, width, height) {
+        ctx.beginPath();
+        ctx.moveTo(0, 400);
+        ctx.bezierCurveTo(400, 300, width - 400, height - 300, width, 600);
+        ctx.strokeStyle = '#06e9a3';
+        ctx.stroke();
+      }
+      function drawSin(ctx, width, height, control) {
+        ctx.clearRect(0, 0, width, height);
+        ctx.fillStyle = '#f3f3f3';
+        ctx.fillRect(0, 0, width, height);
+        ctx.beginPath();
+        const {len, w, f, b, A} = control;
+        var step = width / len;
+        var x = 0, y = height / 2;
+        ctx.moveTo(x, A * Math.sin(w * x + f) + b);
+        for (let i = 0; i < len; i++) {
+          i == 1 && console.log(x, y)
+          x += step;
+          y = A * Math.sin(w * x + f) + b;
+          ctx.lineTo(x, y);
+          ctx.strokeStyle = '#06e9a3';
+          ctx.stroke();
+        }
+      }
+      function setCanvas() {
+        var canvas = document.getElementById('canvas');
+        var content = canvas.parentNode;
+        var width = content.offsetWidth;
+        var height = content.offsetHeight;
+        canvas.width = width;
+        canvas.height = height;
+        var ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#f3f3f3';
+        ctx.fillRect(0, 0, width, height);
+        drawCurve(ctx, width, height);
+      }
+      setCanvas();
+      window.onresize = function(){
+        setCanvas();
+      }
+  </script>
+  </body>
+</html>
